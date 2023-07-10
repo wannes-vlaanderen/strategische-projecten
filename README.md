@@ -35,7 +35,7 @@ Het enige van de javascript code die je moet aanpassen, is de config, tenzij je 
 Behalve bovengenoemde instellingen, kan je verder nog een aantal parameters invullen:
 - title: de titel van uw map, dit komt links boven filters te staan
 - description: een beschrijving van uw map, dit komt net onder de titel te staan
-- sideBarInfo: een lijst, het eerste element is de titel van iedere locatie, het tweede is een beschrijven (analoog als hierboven)
+- sideBarInfo: een lijst, het eerste element is de titel van iedere locatie, het tweede is een beschrijving (analoog als hierboven)
 - popupInfo: een lijst, deze element komen in het vet bovenaan het tekstballonnetje te staan als je op een locatie duwt
 - popupInfo2: een lijst, dit is een link, die komt te staan als 'meer info' onderaan het tesktballonnetje
 - popupInfo3: een lijst, dit is de beschrijving die op uw tekstballonnetje in de midden terechtkomt
