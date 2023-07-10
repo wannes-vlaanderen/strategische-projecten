@@ -28,7 +28,7 @@ Je hebt de mogelijkheid om bij het opstarten van de webpagina, in te zoomen naar
 Als csv bestand wordt gebruik gemaakt van google spreadsheets, elke link naar een csv bestand zou echter moeten werken (dit is niet getest).  
 Het csv bestand moet minstens de kolommen 'Longitude' en 'Latitude' bevatten (lijn 1 wordt gezien als kolomheaders), waar het klikbare puntje zal verschijnen. Verder kan je nog kolommen toevoegen die meer informatie geven over een pointer.  
 Je kan kolommen invoegen in het csv bestand, waarop kan worden gefilterd (meer hierover later).  
-In de js code op codepen, in config, moet je cvs aanvullen met een link naar je csv file, in het geval van google spreadsheets, kan volgende link worden gebruikt: "https://docs.google.com/spreadsheets/d/DOCUMENT-UID/gviz/tq?tqx=out:csv&sheet=Sheet1", waarbij 'DOCUMENT-UID' moet worden vervangen door je document UID.
+In de js code op codepen, in config, moet je csv aanvullen met een link naar je csv file, in het geval van google spreadsheets, kan volgende link worden gebruikt: "https://docs.google.com/spreadsheets/d/DOCUMENT-UID/gviz/tq?tqx=out:csv&sheet=Sheet1", waarbij 'DOCUMENT-UID' moet worden vervangen door je document UID.
 
 ### Javascript
 Het enige van de javascript code die je moet aanpassen, is de config, tenzij je extra functionaliteiten wilt toevoegen, leef je gerust uit!  
