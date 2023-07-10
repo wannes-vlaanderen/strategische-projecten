@@ -1,7 +1,7 @@
 De data in de csv file is nog niet af.  
 De kaart op mapbox staat nog niet volledig op punt.
 
-## Gebiedsprogramma Genk-Zuid
+## Strategische projecten vlaanderen
 
 Deze repository bevat een klikbaar kaartje. Een template voor het maken van klikbare kaartjes vind je [hier](https://codepen.io/wannes-vlaanderen/pen/oNQGWxx).
 
