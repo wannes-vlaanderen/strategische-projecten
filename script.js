@@ -11,7 +11,7 @@ const config = {
   title: 'Strategische projecten Vlaanderen',
   description:
     'Dit is nog aan te vullen.',
-  sideBarInfo: ['HuidigeTitel', 'Aanvrager'],
+  sideBarInfo: ['HuidigeTitel',''],
   popupInfo: ['HuidigeTitel'],
   popupInfo2: ['Link'],
   popupInfo3: ['Description'],
@@ -19,7 +19,7 @@ const config = {
     {
       type: 'checkbox', 
       title: 'Status:',
-      columnHeader: 'Status',
+      columnHeader: '_Status',
       listItems: [
         'Afgerond',
         'Lopend',
@@ -37,9 +37,14 @@ const config = {
         'Limburg',
         'Vlaams-Brabant'
       ], // Case sensitive - must match spreadsheet entry; This will take up to six inputs but is best used with a maximum of three;
-    }
+    },
   ],
 };
+
+const lopend = ['periode13-15','periode10-12-lopend']
+const afgerond = ['periode1-3','periode4-6','periode7-9','periode10-12-afgelopen']
+const voortijdigStopgezet = []
+
 
 /* global config csv2geojson turf Assembly $ */
 'use strict';
@@ -63,7 +68,6 @@ const map = new mapboxgl.Map({
 });
 
 function flyToLocation(currentFeature, zoom) {
-  console.log(zoom)
   map.flyTo({
     center: currentFeature,
     zoom: zoom,
@@ -271,110 +275,155 @@ function createFilterObject(filterSettings) {
     }
   });
 }
+function onFilterChange(filterForm) {
+  const filterOptionHTML = filterForm.getElementsByClassName('filter-option');
+  const filterOption = [].slice.call(filterOptionHTML);
+
+  const geojSelectFilters = [];
+  const geojCheckboxFilters = [];
+
+  filteredGeojson.features = [];
+  // const filteredFeatures = [];
+  // filteredGeojson.features = [];
+  var statusFilters = []
+  filterOption.forEach((filter) => {
+    if (filter.type === 'checkbox' && filter.checked) {
+      checkboxFilters.forEach((objs) => {
+        Object.entries(objs).forEach(([, value]) => {
+          if (value.includes(filter.value)) {
+            const geojFilter = [objs.header, filter.value];
+            geojCheckboxFilters.push(geojFilter);
+          }
+          if (value == '_Status') {
+            statusFilters.push(filter.value)
+          }
+        });
+      });
+    }
+    if (statusFilters.includes("Lopend")) {
+      lopend.forEach((id, i) => {
+        map.setLayoutProperty(id, 'visibility', 'visible')
+      })
+    } else {
+      lopend.forEach((id, i) => {
+        map.setLayoutProperty(id, 'visibility', 'none')
+      })
+    }
+    if (statusFilters.includes("Afgerond")) {
+      afgerond.forEach((id, i) => {
+        map.setLayoutProperty(id, 'visibility', 'visible')
+      })
+    } else {
+      afgerond.forEach((id) => {
+        map.setLayoutProperty(id, 'visibility', 'none')
+      })
+    }
+    if (statusFilters.includes("Voortijdig Stopgezet")) {
+      voortijdigStopgezet.forEach((id) => {
+        map.setLayoutProperty(id, 'visibility', 'visible')
+      })
+    } else {
+      voortijdigStopgezet.forEach((id) => {
+        map.setLayoutProperty(id, 'visibility', 'none')
+      })
+    }
+    if (filter.type === 'select-one' && filter.value) {
+      selectFilters.forEach((objs) => {
+        Object.entries(objs).forEach(([, value]) => {
+          if (value.includes(filter.value)) {
+            const geojFilter = [objs.header, filter.value];
+            geojSelectFilters.push(geojFilter);
+          }
+        });
+      });
+    }
+  });
+  if (geojCheckboxFilters.length === 0) {
+    afgerond.forEach((id, i) => {
+      map.setLayoutProperty(id, 'visibility', 'visible')
+    })
+    lopend.forEach((id, i) => {
+      map.setLayoutProperty(id, 'visibility', 'visible')
+    })
+    voortijdigStopgezet.forEach((id, i) => {
+      map.setLayoutProperty(id, 'visibility', 'visible')
+    })
+  }
+
+  if (geojCheckboxFilters.length === 0 && geojSelectFilters.length === 0) {
+    geojsonData.features.forEach((feature) => {
+      filteredGeojson.features.push(feature);
+    });
+  } else if (geojCheckboxFilters.length > 0) {
+    geojCheckboxFilters.forEach((filter) => {
+      geojsonData.features.forEach((feature) => {
+        if (feature.properties[filter[0]].includes(filter[1])) {
+          if (
+            filteredGeojson.features.filter(
+              (f) => f.properties.id === feature.properties.id,
+            ).length === 0
+          ) {
+            filteredGeojson.features.push(feature);
+          }
+        }
+      });
+    });
+    if (geojSelectFilters.length > 0) {
+      const removeIds = [];
+      filteredGeojson.features.forEach((feature) => {
+        let selected = true;
+        geojSelectFilters.forEach((filter) => {
+          if (
+            feature.properties[filter[0]].indexOf(filter[1]) < 0 &&
+            selected === true
+          ) {
+            selected = false;
+            removeIds.push(feature.properties.id);
+          } else if (selected === false) {
+            removeIds.push(feature.properties.id);
+          }
+        });
+      });
+      let uniqueRemoveIds = [...new Set(removeIds)];
+      uniqueRemoveIds.forEach(function (id) {
+        const idx = filteredGeojson.features.findIndex(
+          (f) => f.properties.id === id,
+        );
+        filteredGeojson.features.splice(idx, 1);
+      });
+    }
+  } else {
+    geojsonData.features.forEach((feature) => {
+      let selected = true;
+      geojSelectFilters.forEach((filter) => {
+        if (
+          !feature.properties[filter[0]].includes(filter[1]) &&
+          selected === true
+        ) {
+          selected = false;
+        }
+      });
+      if (
+        selected === true &&
+        filteredGeojson.features.filter(
+          (f) => f.properties.id === feature.properties.id,
+        ).length === 0
+      ) {
+        filteredGeojson.features.push(feature);
+      }
+    });
+  }
+
+  map.getSource('locationData').setData(filteredGeojson);
+  buildLocationList(filteredGeojson);
+};
 
 function applyFilters() {
   const filterForm = document.getElementById('filters');
 
-  filterForm.addEventListener('change', function () {
-    const filterOptionHTML = this.getElementsByClassName('filter-option');
-    const filterOption = [].slice.call(filterOptionHTML);
-
-    const geojSelectFilters = [];
-    const geojCheckboxFilters = [];
-
-    filteredGeojson.features = [];
-    // const filteredFeatures = [];
-    // filteredGeojson.features = [];
-
-    filterOption.forEach((filter) => {
-      if (filter.type === 'checkbox' && filter.checked) {
-        checkboxFilters.forEach((objs) => {
-          Object.entries(objs).forEach(([, value]) => {
-            if (value.includes(filter.value)) {
-              const geojFilter = [objs.header, filter.value];
-              geojCheckboxFilters.push(geojFilter);
-            }
-          });
-        });
-      }
-      if (filter.type === 'select-one' && filter.value) {
-        selectFilters.forEach((objs) => {
-          Object.entries(objs).forEach(([, value]) => {
-            if (value.includes(filter.value)) {
-              const geojFilter = [objs.header, filter.value];
-              geojSelectFilters.push(geojFilter);
-            }
-          });
-        });
-      }
-    });
-
-    if (geojCheckboxFilters.length === 0 && geojSelectFilters.length === 0) {
-      geojsonData.features.forEach((feature) => {
-        filteredGeojson.features.push(feature);
-      });
-    } else if (geojCheckboxFilters.length > 0) {
-      geojCheckboxFilters.forEach((filter) => {
-        geojsonData.features.forEach((feature) => {
-          if (feature.properties[filter[0]].includes(filter[1])) {
-            if (
-              filteredGeojson.features.filter(
-                (f) => f.properties.id === feature.properties.id,
-              ).length === 0
-            ) {
-              filteredGeojson.features.push(feature);
-            }
-          }
-        });
-      });
-      if (geojSelectFilters.length > 0) {
-        const removeIds = [];
-        filteredGeojson.features.forEach((feature) => {
-          let selected = true;
-          geojSelectFilters.forEach((filter) => {
-            if (
-              feature.properties[filter[0]].indexOf(filter[1]) < 0 &&
-              selected === true
-            ) {
-              selected = false;
-              removeIds.push(feature.properties.id);
-            } else if (selected === false) {
-              removeIds.push(feature.properties.id);
-            }
-          });
-        });
-        let uniqueRemoveIds = [...new Set(removeIds)];
-        uniqueRemoveIds.forEach(function (id) {
-          const idx = filteredGeojson.features.findIndex(
-            (f) => f.properties.id === id,
-          );
-          filteredGeojson.features.splice(idx, 1);
-        });
-      }
-    } else {
-      geojsonData.features.forEach((feature) => {
-        let selected = true;
-        geojSelectFilters.forEach((filter) => {
-          if (
-            !feature.properties[filter[0]].includes(filter[1]) &&
-            selected === true
-          ) {
-            selected = false;
-          }
-        });
-        if (
-          selected === true &&
-          filteredGeojson.features.filter(
-            (f) => f.properties.id === feature.properties.id,
-          ).length === 0
-        ) {
-          filteredGeojson.features.push(feature);
-        }
-      });
-    }
-
-    map.getSource('locationData').setData(filteredGeojson);
-    buildLocationList(filteredGeojson);
+  
+  filterForm.addEventListener('change', () => {
+    onFilterChange(filterForm)
   });
 }
 
@@ -395,17 +444,20 @@ function removeFilters() {
   const checkboxOption = [].slice.call(input);
   filteredGeojson.features = [];
   checkboxOption.forEach((checkbox) => {
-    if (checkbox.type === 'checkbox' && checkbox.checked === true) {
-      checkbox.checked = false;
+    if (checkbox.type === 'checkbox') {
+      checkbox.checked = checkbox.defaultChecked;
     }
   });
 
   selectOption.forEach((option) => {
     option.selectedIndex = 0;
   });
+  
+  const filterForm = document.getElementById('filters')
 
   map.getSource('locationData').setData(geojsonData);
   buildLocationList(geojsonData);
+  onFilterChange(filterForm)
 }
 
 function removeFiltersButton() {
@@ -468,6 +520,13 @@ geocoder.on('result', (ev) => {
 map.on('load', () => {
   map.addControl(geocoder, 'top-right');
   map.removeControl(geocoder);
+  const filterForm = document.getElementById("filters")
+  const filterOptionHTML = filterForm.getElementsByClassName('filter-option');
+  filterOptionHTML[1].defaultChecked = true;
+  
+  afgerond.forEach( (id, i) => {
+    map.setLayoutProperty(id, 'visibility', 'none')
+  })
 
   // csv2geojson - following the Sheet Mapper tutorial https://www.mapbox.com/impact-tools/sheet-mapper
   console.log('loaded');
@@ -479,6 +538,8 @@ map.on('load', () => {
       dataType: 'text',
       success: function (csvData) {
         makeGeoJSON(csvData);
+        const filterForm = document.getElementById("filters");
+        onFilterChange(filterForm)
       },
       error: function (request, status, error) {
         console.log(request);
@@ -543,6 +604,8 @@ map.on('load', () => {
   }
 });
 
+  
+  
 // Modal - popup for filtering results
 const filterResults = document.getElementById('filterResults');
 const exitButton = document.getElementById('exitButton');
@@ -599,7 +662,6 @@ onAdd(map) {
   }
 }
 map.addControl(new LogoVlaanderen(), "top-left")
-
 
 
 
