@@ -43,7 +43,13 @@ const config = {
 
 const lopend = ['periode13-15','periode10-12-lopend']
 const afgerond = ['periode1-3','periode4-6','periode7-9','periode10-12-afgelopen']
-const voortijdigStopgezet = []
+const voortijdigStopgezet = ['periode10-12-voortijdig-stopg']
+const allLayers = [].concat(lopend).concat(afgerond).concat(voortijdigStopgezet)
+const hoverLayers = []
+allLayers.forEach(id => {
+  hoverLayers.push(id + "-hover")
+})
+const featuredLayers = []
 
 
 /* global config csv2geojson turf Assembly $ */
@@ -72,6 +78,12 @@ function flyToLocation(currentFeature, zoom) {
     center: currentFeature,
     zoom: zoom,
   });
+  while (featuredLayers.length != 0) {
+    var layer = featuredLayers.pop()
+    map.getSource(layer).setData({
+      type: 'FeatureCollection', features: []
+    })
+  }
 }
 
 function createPopup(currentFeature) {
@@ -89,8 +101,7 @@ function createPopup(currentFeature) {
     '<p><a href="' +
     currentFeature.properties[config.popupInfo2] +
     '" target="_blank">Meer info</a></p>' + '</h3>'
-)
-    .addTo(map);
+  ).addTo(map);
 }
 
 function buildLocationList(locationData) {
@@ -339,13 +350,7 @@ function onFilterChange(filterForm) {
     }
   });
   if (geojCheckboxFilters.length === 0) {
-    afgerond.forEach((id, i) => {
-      map.setLayoutProperty(id, 'visibility', 'visible')
-    })
-    lopend.forEach((id, i) => {
-      map.setLayoutProperty(id, 'visibility', 'visible')
-    })
-    voortijdigStopgezet.forEach((id, i) => {
+    allLayers.forEach((id, i) => {
       map.setLayoutProperty(id, 'visibility', 'visible')
     })
   }
@@ -523,6 +528,23 @@ map.on('load', () => {
   const filterForm = document.getElementById("filters")
   const filterOptionHTML = filterForm.getElementsByClassName('filter-option');
   filterOptionHTML[1].defaultChecked = true;
+  allLayers.forEach((id) => {
+    map.addSource(id, {
+      type: 'geojson', data: {
+        type: 'FeatureCollection', features: []
+      }
+    })
+    map.addLayer({
+      id: id + '-hover',
+      type: 'fill',
+      source: id,
+      paint: {
+        'fill-color': '#ffffff',
+        'fill-opacity': 1
+      }
+    })
+  })
+  
   
   afgerond.forEach( (id, i) => {
     map.setLayoutProperty(id, 'visibility', 'none')
@@ -601,6 +623,34 @@ map.on('load', () => {
       map.getCanvas().style.cursor = '';
     });
     buildLocationList(geojsonData);
+    
+    map.on('mousemove', (mouse) => {
+      const popups = document.getElementsByClassName('mapboxgl-popup');
+      if (popups[0]) {return}
+      var candidates = []
+      var features = map.queryRenderedFeatures(mouse.point);
+      while (featuredLayers.length != 0) {
+        var layer = featuredLayers.pop()
+        map.getSource(layer).setData({
+          type: 'FeatureCollection', features: []
+        })
+      }
+      features.forEach((feature) => {
+        if (allLayers.includes(feature.layer.id)) {
+          candidates.push(feature)
+        }
+      })
+      if (candidates.length > 0) {
+        var shape_areas = candidates.map(feature => feature.properties._shape_area)
+        const min = Math.min(...shape_areas)
+        const index = shape_areas.indexOf(min)
+        const featured_shape = candidates[index]
+        map.getSource(featured_shape.layer.id).setData({
+          type: 'FeatureCollection', features: [ featured_shape ]
+        })
+        featuredLayers.push(featured_shape.layer.id)
+      }
+    })
   }
 });
 
