@@ -2,9 +2,8 @@
 
 // eslint-disable-next-line no-unused-vars
 const config = {
-  style: 'mapbox://styles/wannes-vlaanderen/cljqwncag011x01qy2has9keo',
-  accessToken:
-    'pk.eyJ1Ijoid2FubmVzLXZsYWFuZGVyZW4iLCJhIjoiY2xqb2Q0MDUxMDhjeDNtcGIxNjF4a2lrbyJ9.TmBAlCtIR-SS3YXwXvUJlA',
+  style: 'mapbox://styles/gop-vlaanderen/clkqz05n100e401phciza5ejc',
+  accessToken: 'pk.eyJ1IjoiZ29wLXZsYWFuZGVyZW4iLCJhIjoiY2xrbWUxd3JxMDUzMTNmcXM5b3BmZzlpbiJ9.aBM2HJPp13PlB0uCFexfYg',
   CSV: 'https://docs.google.com/spreadsheets/d/1xnmhFr06KQbsbaKeSnYWRqXK9qQ0u6ijO1nIw86f168/gviz/tq?tqx=out:csv&sheet=Sheet1',
   center: [4.255829,51.052618],
   zoom: 7.25,
