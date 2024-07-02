@@ -9,7 +9,7 @@ const config = {
   zoom: 7.25,
   title: 'Strategische projecten Vlaanderen',
   description:
-    'Dit is nog aan te vullen.',
+    'Overzicht van de strategische project.',
   sideBarInfo: ['HuidigeTitel',''],
   popupInfo: ['HuidigeTitel'],
   popupInfo2: ['Link'],
